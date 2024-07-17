@@ -1,0 +1,6 @@
+@AllaCookidoo_HostAddress = http://localhost:5058
+
+GET {{AllaCookidoo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
