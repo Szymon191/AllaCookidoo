@@ -4,6 +4,7 @@ using AllaCookidoo.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AllaCookidoo.Migrations
 {
     [DbContext(typeof(AllaCookidoDatabaseContext))]
-    partial class AllaCookidoDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20240730094053_RecipeIngredient")]
+    partial class RecipeIngredient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

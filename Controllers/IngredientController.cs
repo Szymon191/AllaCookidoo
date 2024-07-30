@@ -1,5 +1,8 @@
-﻿using AllaCookidoo.Database;
+﻿using AllaCookidoo.Controllers;
+using AllaCookidoo.Database;
 using AllaCookidoo.Models;
+using AllaCookidoo.Responses;
+using AllaCookidoo.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,26 +12,66 @@ namespace AllaCookidoo.Controls
     [ApiController]
     public class IngredientController : ControllerBase
     {
+        private readonly IIngredientService _ingredientService;
+        private readonly ILogger<IngredientController> _logger;
 
-        private readonly AllaCookidoDatabaseContext _context;
-
-        public IngredientController(AllaCookidoDatabaseContext context)
+        public IngredientController(IIngredientService ingredientService, ILogger<IngredientController> logger)
         {
-            _context = context;
+            _ingredientService = ingredientService;
+            _logger = logger;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ingredient>>> GetIngredients()
+        public async Task<ActionResult<IEnumerable<IngredientResponse>>> GetIngredients()
         {
-            return await _context.Ingredients.ToListAsync();
+            _logger.LogInformation("Pobieranie wszystkich skladnikow");
+            var feedbacks = await _ingredientService.GetIngredients();
+            return Ok(feedbacks);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<IngredientResponse>> GetIngredientById(int id)
+        {
+            _logger.LogInformation("Pobieranie skladiku o ID: {Id}", id);
+            var ingredient = await _ingredientService.GetIngredientById(id);
+            if (ingredient == null)
+            {
+                _logger.LogWarning("skladnik o ID {Id} nie została znaleziona", id);
+                return NotFound();
+            }
+            return Ok(ingredient);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Ingredient>> PostIngredient(Ingredient ingredient)
+        public async Task<ActionResult> PostIngredient(IngredientReguest ingredientRequest)
         {
-            _context.Ingredients.Add(ingredient);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetIngredients), new { id = ingredient.IngredientId }, ingredient);
+            _logger.LogInformation("Dodawanie nowego skladniku");
+            await _ingredientService.AddIngredient(ingredientRequest);
+            return CreatedAtAction(nameof(GetIngredientById), new { id = ingredientRequest.Id }, ingredientRequest);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateIngredient(int id, IngredientResponse ingredientUpdate)
+        {
+            _logger.LogInformation("Aktualizacja skladnikow o ID: {FeedbackId}", id);
+            if (id != ingredientUpdate.Id)
+            {
+                _logger.LogWarning("ID skladniku w URL ({UrlId}) nie zgadza się z ID skladniku w treści ({ContentId})", id, ingredientUpdate.Id);
+                return BadRequest();
+            }
+
+            await _ingredientService.UpdateIngredient(id, ingredientUpdate);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteIngredient(int id)
+        {
+            _logger.LogInformation("Usuwanie skladniku o ID: {Id}", id);
+            await _ingredientService.DeleteIngredient(id);
+            return NoContent();
+        }
+
+
     }
 }

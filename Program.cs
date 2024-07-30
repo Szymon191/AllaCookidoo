@@ -15,11 +15,20 @@ builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 
+builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+
+builder.Services.AddScoped<IIngredientRepository, IngredientRepository>();
+builder.Services.AddScoped<IIngredientService, IngredientService>();
+
+builder.Services.AddScoped<IRecipeIngredientRepository, RecipeIngredientRepository>();
+builder.Services.AddScoped<IRecipeIngredientService,  RecipeIngredientService>();
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-var connectionString = builder.Configuration.GetConnectionString("AzureConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AllaCookidoDatabaseContext>(opt => opt.UseSqlServer(connectionString));
 
 
@@ -40,12 +49,10 @@ var app = builder.Build();
 //middleware Correlation ID
 app.UseMiddleware<CorelationIdMiddleware>();
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-//}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 

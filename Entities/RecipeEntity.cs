@@ -14,5 +14,8 @@
         public int CategoryId { get; set; }
         public CategoryEntity Category { get; set; } = null!;
 
+        public ICollection<FeedbackEntity> Feedbacks { get; set; }
+        public ICollection<RecipeIngredientEntity> RecipeIngredients { get; set; }
+
     }
 }

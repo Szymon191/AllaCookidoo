@@ -31,8 +31,14 @@ namespace AllaCookidoo.Repositories
         public async Task<RecipeEntity> GetRecipeById(int id)
         {
             _logger.LogInformation("Pobieranie przepisu o ID: {RecipeId} z bazy danych", id);
-            return await _context.Recipes.FindAsync(id);
+            //return await _context.Recipes.Include(r => r.Feedbacks).FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
+            return await _context.Recipes.Where(x => !x.IsDeleted)
+            .Include(r => r.Feedbacks)
+            .Include(r => r.RecipeIngredients)
+            .ThenInclude(ri => ri.Ingredient)
+            .FirstOrDefaultAsync(r => r.Id == id);
         }
+
 
         public async Task AddRecipe(RecipeEntity recipe)
         {
@@ -46,10 +52,7 @@ namespace AllaCookidoo.Repositories
             catch (Exception ex)
             {
                 _logger.LogError("blad podczas dodawania nowego przepisu {ex}", ex);
-            }
-
-
-            
+            }    
         }
 
         public async Task UpdateRecipe(RecipeEntity recipe)

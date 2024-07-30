@@ -4,6 +4,7 @@ using AllaCookidoo.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AllaCookidoo.Migrations
 {
     [DbContext(typeof(AllaCookidoDatabaseContext))]
-    partial class AllaCookidoDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20240729064510_createreviews")]
+    partial class createreviews
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,7 +55,7 @@ namespace AllaCookidoo.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("AllaCookidoo.Entities.FeedbackEntity", b =>
+            modelBuilder.Entity("AllaCookidoo.Entities.Feedback", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -62,9 +65,6 @@ namespace AllaCookidoo.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("Evaluation")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -84,32 +84,6 @@ namespace AllaCookidoo.Migrations
                     b.HasIndex("RecipeId");
 
                     b.ToTable("Feedbacks");
-                });
-
-            modelBuilder.Entity("AllaCookidoo.Entities.IngredientEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Ingredients");
                 });
 
             modelBuilder.Entity("AllaCookidoo.Entities.RecipeEntity", b =>
@@ -155,46 +129,33 @@ namespace AllaCookidoo.Migrations
                     b.ToTable("Recipes");
                 });
 
-            modelBuilder.Entity("AllaCookidoo.Entities.RecipeIngredientEntity", b =>
+            modelBuilder.Entity("AllaCookidoo.Models.Ingredient", b =>
                 {
-                    b.Property<int>("RecipeIngredientId")
+                    b.Property<int>("IngredientId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecipeIngredientId"));
-
-                    b.Property<string>("Amount")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IngredientId"));
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("IngredientId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("RecipeIngredientId");
+                    b.HasKey("IngredientId");
 
-                    b.HasIndex("IngredientId");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("RecipeIngredients");
+                    b.ToTable("Ingredients");
                 });
 
-            modelBuilder.Entity("AllaCookidoo.Entities.FeedbackEntity", b =>
+            modelBuilder.Entity("AllaCookidoo.Entities.Feedback", b =>
                 {
                     b.HasOne("AllaCookidoo.Entities.RecipeEntity", "Recipe")
-                        .WithMany("Feedbacks")
+                        .WithMany("feedbacks")
                         .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -213,40 +174,14 @@ namespace AllaCookidoo.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("AllaCookidoo.Entities.RecipeIngredientEntity", b =>
-                {
-                    b.HasOne("AllaCookidoo.Entities.IngredientEntity", "Ingredient")
-                        .WithMany("RecipeIngredients")
-                        .HasForeignKey("IngredientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AllaCookidoo.Entities.RecipeEntity", "Recipe")
-                        .WithMany("RecipeIngredients")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ingredient");
-
-                    b.Navigation("Recipe");
-                });
-
             modelBuilder.Entity("AllaCookidoo.Entities.CategoryEntity", b =>
                 {
                     b.Navigation("Recipe");
                 });
 
-            modelBuilder.Entity("AllaCookidoo.Entities.IngredientEntity", b =>
-                {
-                    b.Navigation("RecipeIngredients");
-                });
-
             modelBuilder.Entity("AllaCookidoo.Entities.RecipeEntity", b =>
                 {
-                    b.Navigation("Feedbacks");
-
-                    b.Navigation("RecipeIngredients");
+                    b.Navigation("feedbacks");
                 });
 #pragma warning restore 612, 618
         }

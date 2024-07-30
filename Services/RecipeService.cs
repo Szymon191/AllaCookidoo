@@ -3,6 +3,7 @@ using AllaCookidoo.Models;
 using AllaCookidoo.Repositories;
 using AllaCookidoo.Responses;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace AllaCookidoo.Services
 {
@@ -25,10 +26,8 @@ namespace AllaCookidoo.Services
                 var response = recipes.Select(recipe => new RecipeResponse
                 {
                     CategoryId = recipe.CategoryId,
-                    CookTime = recipe.CookTime,
                     RecipeId = recipe.Id,
                     Description = recipe.Description,
-                    Instruction = recipe.Instruction,
                     Name = recipe.Name
                 }).ToList();
 
@@ -51,10 +50,8 @@ namespace AllaCookidoo.Services
                 var response = recipes.Select(recipe => new RecipeResponse
                 {
                     CategoryId = recipe.CategoryId,
-                    CookTime = recipe.CookTime,
                     RecipeId = recipe.Id,
                     Description = recipe.Description,
-                    Instruction = recipe.Instruction,
                     Name = recipe.Name
                 }).ToList();
 
@@ -83,9 +80,7 @@ namespace AllaCookidoo.Services
                 var response = new RecipeResponse
                 {
                     Name = recipe.Name,
-                    Instruction = recipe.Instruction,
                     CategoryId = recipe.CategoryId,
-                    CookTime = recipe.CookTime,
                     Description = recipe.Description,
                     RecipeId = recipe.Id,
                 };
@@ -128,7 +123,7 @@ namespace AllaCookidoo.Services
             }
         }
 
-        public async Task UpdateRecipe(int id, RecipeResponse recipeUpdate)
+        public async Task UpdateRecipe(int id, RecipeDetailsResponse recipeUpdate)
         {
             _logger.LogInformation("Aktualizacja przepisu o ID: {RecipeId}", id);
             try
@@ -178,6 +173,52 @@ namespace AllaCookidoo.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Błąd podczas usuwania przepisu o ID {RecipeId}", id);
+                throw;
+            }
+        }
+
+        public async Task<RecipeDetailsResponse> GetRecipeDetailsById(int id)
+        {
+            _logger.LogInformation("Pobieranie szczegolow przepisu o ID: {RecipeId}", id);
+            try
+            {
+                var recipe = await _recipeRepository.GetRecipeById(id);
+                if (recipe == null || recipe.IsDeleted)
+                {
+                    _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony lub został usunięty", id);
+                    return null;
+                }
+
+                var response = new RecipeDetailsResponse
+                {
+                    Name = recipe.Name,
+                    CategoryId = recipe.CategoryId,
+                    Description = recipe.Description,
+                    RecipeId = recipe.Id,
+                    CookTime = recipe.CookTime,
+                    Instruction = recipe.Instruction,
+                    Feedbacks = recipe.Feedbacks.Select(f => new FeedbackResponse
+                    {
+                        Id = f.Id,
+                        Evaluation = f.Evaluation,
+                        Opinion = f.Opinion,
+                        RecipeId = f.RecipeId
+                    }).ToList(),
+                    RecipeIngredients = recipe.RecipeIngredients.Select(ri => new RecipeIngredientResponse
+                    {
+                        RecipeIngredientId = ri.RecipeIngredientId,
+                        IngredientId = ri.IngredientId,
+                        Amount = ri.Amount,
+                        IngredientName = ri.Ingredient.Name
+                    }).ToList()
+                };
+
+                _logger.LogDebug("Znaleziono szczegoly przepisu o ID {RecipeId}: {RecipeName}", id, response.Name);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Błąd podczas pobierania szczegolow przepisu o ID {RecipeId}", id);
                 throw;
             }
         }

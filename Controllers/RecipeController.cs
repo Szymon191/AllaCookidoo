@@ -51,6 +51,21 @@ namespace AllaCookidoo.Controls
 
         }
 
+        [HttpGet("GetDetailsRecipeById:{id}")]
+        public async Task<ActionResult<RecipeDetailsResponse>> GetDetailsRecipeById(int id)
+        {
+            _logger.LogInformation("Pobieranie szczegolow przepisu o ID: {RecipeId}", id);
+            var recipe = await _recipeService.GetRecipeDetailsById(id);
+            if (recipe == null)
+            {
+                _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony", id);
+                return NotFound();
+            }
+
+            return Ok(recipe);
+
+        }
+
         [HttpPost]
         public async Task<ActionResult> PostRecipe(RecipeRequest recipeCreation)
         {
@@ -60,7 +75,7 @@ namespace AllaCookidoo.Controls
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRecipe(int id, RecipeResponse recipeUpdate)
+        public async Task<IActionResult> UpdateRecipe(int id, RecipeDetailsResponse recipeUpdate)
         {
             _logger.LogInformation("Aktualizacja przepisu o ID: {RecipeId}", id);
             if (id != recipeUpdate.RecipeId)
