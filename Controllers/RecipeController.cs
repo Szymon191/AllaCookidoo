@@ -22,7 +22,7 @@ namespace AllaCookidoo.Controls
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecipeResponse>>> GetRecipes()
         {
-            _logger.LogInformation("Pobieranie wszystkich przepisów");
+            _logger.LogInformation("Fetching all recipes");
             var recipes = await _recipeService.GetRecipes();
 
             return Ok(recipes);
@@ -31,7 +31,7 @@ namespace AllaCookidoo.Controls
         [HttpGet("getRecipesfromCategorii/{id}")]
         public async Task<ActionResult<IEnumerable<RecipeResponse>>> GetRecipesFromCategory(int id)
         {
-            _logger.LogInformation("Pobieranie przepisów o danej kategorii o ID: {CategoryId}", id);
+            _logger.LogInformation("Fetching recipes for category: {CategoryId}", id);
             var recipes = await _recipeService.GetRecipesFromCategory(id);
             return Ok(recipes);
         }
@@ -39,37 +39,45 @@ namespace AllaCookidoo.Controls
         [HttpGet("{id}")]
         public async Task<ActionResult<RecipeResponse>> GetRecipeById(int id)
         {
-            _logger.LogInformation("Pobieranie przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Fetching recipe with ID: {RecipeId}", id);
             var recipe = await _recipeService.GetRecipeById(id);
             if (recipe == null)
             {
                 _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony", id);
                 return NotFound();
             }
-
             return Ok(recipe);
-
         }
 
         [HttpGet("GetDetailsRecipeById:{id}")]
         public async Task<ActionResult<RecipeDetailsResponse>> GetDetailsRecipeById(int id)
         {
-            _logger.LogInformation("Pobieranie szczegolow przepisu o ID: {RecipeId}", id);
-            var recipe = await _recipeService.GetRecipeDetailsById(id);
-            if (recipe == null)
+            _logger.LogInformation("Fetching details of recipe with ID: {RecipeId}", id);
+            try
             {
-                _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony", id);
-                return NotFound();
+                var recipe = await _recipeService.GetRecipeDetailsById(id);
+                if (recipe == null)
+                {
+                    _logger.LogWarning("Recipe with ID {RecipeId} was not found", id);
+                    return NotFound();
+                }
+                return Ok(recipe);
             }
-
-            return Ok(recipe);
-
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching details recipe with ID {RecipeId}", id);
+                return StatusCode(500, "Serwer Error.");
+            }
         }
 
         [HttpPost]
         public async Task<ActionResult> PostRecipe(RecipeRequest recipeCreation)
         {
-            _logger.LogInformation("Dodawanie nowego przepisu");
+            _logger.LogInformation("Adding new recipe");
+            if(recipeCreation == null)
+            {
+                return NotFound();
+            }
             await _recipeService.AddRecipe(recipeCreation);
             return CreatedAtAction(nameof(GetRecipeById), new { id = recipeCreation.RecipeId }, recipeCreation);
         }
@@ -77,13 +85,12 @@ namespace AllaCookidoo.Controls
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRecipe(int id, RecipeDetailsResponse recipeUpdate)
         {
-            _logger.LogInformation("Aktualizacja przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Updating recipe with ID: {RecipeId}", id);
             if (id != recipeUpdate.RecipeId)
             {
-                _logger.LogWarning("ID przepisu w URL: { UrlId} nie zgadza się z ID przepisu w treści: { ContentId}", id, recipeUpdate.RecipeId);
+                _logger.LogWarning("Recipe ID in URL: {UrlId} does not match with recipe ID in content: {ContentId}", id, recipeUpdate.RecipeId);
                 return BadRequest();
             }
-
             await _recipeService.UpdateRecipe(id, recipeUpdate);
 
             return Created();
@@ -92,7 +99,7 @@ namespace AllaCookidoo.Controls
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecipe(int id)
         {
-            _logger.LogInformation("Usuwanie przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Deleting recipe with ID: {RecipeId}", id);
             await _recipeService.DeleteRecipe(id);
             return Created();
         }

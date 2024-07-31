@@ -18,19 +18,19 @@ namespace AllaCookidoo.Repositories
 
         public async Task<IEnumerable<RecipeEntity>> GetRecipes()
         {
-            _logger.LogInformation("Pobieranie wszystkich przepisów z bazy danych");
+            _logger.LogInformation("Fetching all recipes from database");
             return await _context.Recipes.Where(x => !x.IsDeleted).ToListAsync();
         }
 
         public async Task<IEnumerable<RecipeEntity>> GetRecipesFromCategory(int categoryId)
         {
-            _logger.LogInformation("Pobieranie przepisów z kategorii o ID: {CategoryId}", categoryId);
+            _logger.LogInformation("Fetching recipes for category: {CategoryId}", categoryId);
             return await _context.Recipes.Where(x => !x.IsDeleted && x.CategoryId == categoryId).ToListAsync();
         }
 
         public async Task<RecipeEntity> GetRecipeById(int id)
         {
-            _logger.LogInformation("Pobieranie przepisu o ID: {RecipeId} z bazy danych", id);
+            _logger.LogInformation("Fetching recipe with ID: {RecipeId} from database", id);
             //return await _context.Recipes.Include(r => r.Feedbacks).FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
             return await _context.Recipes.Where(x => !x.IsDeleted)
             .Include(r => r.Feedbacks)
@@ -44,20 +44,20 @@ namespace AllaCookidoo.Repositories
         {
             try
             {
-                _logger.LogInformation("Dodawanie nowego przepisu do bazy danych");
+                _logger.LogInformation("Adding new recipe to database");
 
                 _context.Recipes.Add(recipe);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError("blad podczas dodawania nowego przepisu {ex}", ex);
+                _logger.LogError("Error adding new recipe: {ex}", ex);
             }    
         }
 
         public async Task UpdateRecipe(RecipeEntity recipe)
         {
-            _logger.LogInformation("Aktualizacja przepisu o ID: {RecipeId} w bazie danych", recipe.Id);
+            _logger.LogInformation("Updating recipe with ID: {RecipeId} in database", recipe.Id);
             _context.Entry(recipe).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }

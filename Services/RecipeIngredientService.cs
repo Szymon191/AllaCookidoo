@@ -9,16 +9,22 @@ namespace AllaCookidoo.Services
     {
         private readonly IRecipeIngredientRepository _recipeIngredientRepository;
         private readonly ILogger<RecipeIngredientService> _logger;
+        private readonly IRecipeRepository _recipeRepository;
+        private IIngredientRepository _ingredientRepository;
 
-        public RecipeIngredientService(IRecipeIngredientRepository recipeIngredientRepository, ILogger<RecipeIngredientService> logger)
+
+        public RecipeIngredientService(IRecipeIngredientRepository recipeIngredientRepository, ILogger<RecipeIngredientService> logger,
+            IRecipeRepository recipeRepository, IIngredientRepository ingredientRepository)
         {
             _recipeIngredientRepository = recipeIngredientRepository;
             _logger = logger;
+            _recipeRepository = recipeRepository;
+            _ingredientRepository = ingredientRepository;
         }
 
         public async Task<IEnumerable<RecipeIngredientResponse>> GetRecipeIngredients()
         {
-            _logger.LogInformation("Pobieranie wszystkich składników przepisu");
+            _logger.LogInformation("Fetching all recipe ingredients");
             var recipeIngredients = await _recipeIngredientRepository.GetRecipeIngredients();
             return recipeIngredients.Select(recipeIngredient => new RecipeIngredientResponse
             {
@@ -30,11 +36,11 @@ namespace AllaCookidoo.Services
 
         public async Task<RecipeIngredientResponse> GetRecipeIngredientById(int id)
         {
-            _logger.LogInformation("Pobieranie składnika przepisu o ID: {RecipeIngredientId}", id);
+            _logger.LogInformation("Fetching recipe ingredient with ID: {RecipeIngredientId}", id);
             var recipeIngredient = await _recipeIngredientRepository.GetRecipeIngredientById(id);
             if (recipeIngredient == null)
             {
-                _logger.LogWarning("Składnik przepisu o ID {RecipeIngredientId} nie został znaleziony", id);
+                _logger.LogWarning("Recipe ingredient with ID {RecipeIngredientId} not found", id);
                 return null;
             }
 
@@ -48,7 +54,19 @@ namespace AllaCookidoo.Services
 
         public async Task AddRecipeIngredient(RecipeIngredientRequest recipeIngredientCreation)
         {
-            _logger.LogInformation("Dodawanie nowego składnika przepisu");
+            var recipeExists = await _recipeRepository.GetRecipeById(recipeIngredientCreation.RecipeId);
+            if (recipeExists == null)
+            {
+                _logger.LogWarning("Recipe with ID {Id} does not exist", recipeIngredientCreation.RecipeId);
+                throw new ArgumentException($"Recipe with ID {recipeIngredientCreation.RecipeId} does not exist.");
+            }
+            var ingredientExists = await _ingredientRepository.GetIngredientById(recipeIngredientCreation.IngredientId);
+            if (ingredientExists == null)
+            {
+                _logger.LogWarning("Ingredient with ID {Id} does not exist", recipeIngredientCreation.IngredientId);
+                throw new ArgumentException($"Ingredient with ID {recipeIngredientCreation.IngredientId} does not exist.");
+            }
+            _logger.LogInformation("Adding new recipe ingredient");
             var recipeIngredientEntity = new RecipeIngredientEntity
             {
                 RecipeId = recipeIngredientCreation.RecipeId,
@@ -63,11 +81,17 @@ namespace AllaCookidoo.Services
 
         public async Task UpdateRecipeIngredient(int id, RecipeIngredientResponse recipeIngredientUpdate)
         {
-            _logger.LogInformation("Aktualizacja składnika przepisu o ID: {RecipeIngredientId}", id);
+            var ingredientExists = await _ingredientRepository.GetIngredientById(recipeIngredientUpdate.IngredientId);
+            if (ingredientExists == null)
+            {
+                _logger.LogWarning("Ingredient with ID {Id} does not exist", recipeIngredientUpdate.IngredientId);
+                throw new ArgumentException($"Ingredient with ID {recipeIngredientUpdate.IngredientId} does not exist.");
+            }
+            _logger.LogInformation("Updating recipe ingredient with ID: {RecipeIngredientId}", id);
             var recipeIngredientEntity = await _recipeIngredientRepository.GetRecipeIngredientById(id);
             if (recipeIngredientEntity == null)
             {
-                _logger.LogWarning("Składnik przepisu o ID {RecipeIngredientId} nie został znaleziony", id);
+                _logger.LogWarning("Recipe ingredient with ID {RecipeIngredientId} not found", id);
                 throw new KeyNotFoundException("Recipe ingredient not found");
             }
 
@@ -80,13 +104,13 @@ namespace AllaCookidoo.Services
 
         public async Task DeleteRecipeIngredient(int id)
         {
-            _logger.LogInformation("Usuwanie składnika przepisu o ID: {RecipeIngredientId}", id);
+            _logger.LogInformation("Deleting recipe ingredient with ID: {RecipeIngredientId}", id);
             try
             {
                 var RecipeIngredientEntity = await _recipeIngredientRepository.GetRecipeIngredientById(id);
                 if (RecipeIngredientEntity == null)
                 {
-                    _logger.LogWarning("RecipeIngredient o ID {Id} nie został znaleziony", id);
+                    _logger.LogWarning("Recipe ingredient with ID {Id} not found", id);
                     throw new KeyNotFoundException("RecipeIngredient not found");
                 }
 
@@ -94,11 +118,11 @@ namespace AllaCookidoo.Services
                 RecipeIngredientEntity.UpdatedDate = DateTime.UtcNow;
 
                 await _recipeIngredientRepository.UpdateRecipeIngredient(RecipeIngredientEntity);
-                _logger.LogDebug("Usunięto RecipeIngredient o ID {Id}", id);
+                _logger.LogDebug("Deleted recipe ingredient with ID {Id}", id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas usuwania RecipeIngredient o ID {Id}", id);
+                _logger.LogError(ex, "Error deleting recipe ingredient with ID {Id}", id);
                 throw;
             }
         }

@@ -17,14 +17,14 @@ namespace AllaCookidoo.Repositories
 
         public async Task AddRecipeIngredient(RecipeIngredientEntity recipeIngredient)
         {
-            _logger.LogInformation("Dodawanie nowego składnika przepisu do bazy danych");
+            _logger.LogInformation("Adding new recipe ingredient tp database");
             _context.RecipeIngredients.Add(recipeIngredient);
             await _context.SaveChangesAsync();
         }
 
         public async Task<RecipeIngredientEntity> GetRecipeIngredientById(int id)
         {
-            _logger.LogInformation("Pobieranie składnika przepisu o ID: {RecipeIngredientId} z bazy danych", id);
+            _logger.LogInformation("Fetching recipe ingredient with ID: {RecipeIngredientId} from database", id);
             return await _context.RecipeIngredients
             .Include(ri => ri.Recipe)
             .Include(ri => ri.Ingredient)
@@ -33,7 +33,7 @@ namespace AllaCookidoo.Repositories
 
         public async Task<IEnumerable<RecipeIngredientEntity>> GetRecipeIngredients()
         {
-            _logger.LogInformation("Pobieranie wszystkich składników przepisu z bazy danych");
+            _logger.LogInformation("Fetching all recipe ingredients from database");
             return await _context.RecipeIngredients.Where(x => !x.IsDeleted)
             .Include(ri => ri.Recipe)
             .Include(ri => ri.Ingredient)
@@ -43,7 +43,7 @@ namespace AllaCookidoo.Repositories
 
         public async Task UpdateRecipeIngredient(RecipeIngredientEntity recipeIngredient)
         {
-            _logger.LogInformation("Aktualizacja składnika przepisu o ID: {RecipeIngredientId}", recipeIngredient.RecipeIngredientId);
+            _logger.LogInformation("Updating recipe ingredient with ID: {RecipeIngredientId}", recipeIngredient.RecipeIngredientId);
             _context.Entry(recipeIngredient).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }

@@ -22,7 +22,7 @@ namespace AllaCookidoo.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FeedbackResponse>>> GetFeedbacks()
         {
-            _logger.LogInformation("Pobieranie wszystkich opinii");
+            _logger.LogInformation("Fetching all feedbacks");
             var feedbacks = await _feedbackService.GetFeedbacks();
             return Ok(feedbacks);
         }
@@ -30,7 +30,7 @@ namespace AllaCookidoo.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<FeedbackResponse>> GetFeedbackById(int id)
         {
-            _logger.LogInformation("Pobieranie opinii o ID: {FeedbackId}", id);
+            _logger.LogInformation("Fetching feedback with ID: {feedbackId}", id);
             var feedback = await _feedbackService.GetFeedbackById(id);
             if (feedback == null)
             {
@@ -43,7 +43,7 @@ namespace AllaCookidoo.Controllers
         [HttpPost]
         public async Task<ActionResult> PostFeedback(FeedbackRequest feedbackRequest)
         {
-            _logger.LogInformation("Dodawanie nowej opinii");
+            _logger.LogInformation("Adding new feedback:");
             await _feedbackService.AddFeedback(feedbackRequest);
             return CreatedAtAction(nameof(GetFeedbackById), new { id = feedbackRequest.RecipeId }, feedbackRequest);
         }
@@ -51,10 +51,12 @@ namespace AllaCookidoo.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFeedback(int id, FeedbackResponse feedbackUpdate)
         {
-            _logger.LogInformation("Aktualizacja opinii o ID: {FeedbackId}", id);
+            _logger.LogInformation("Updating feedback with ID: {feedbackId}", id);
             if (id != feedbackUpdate.RecipeId)
             {
                 _logger.LogWarning("ID opinii w URL ({UrlId}) nie zgadza się z ID opinii w treści ({ContentId})", id, feedbackUpdate.RecipeId);
+                _logger.LogWarning("Feedback ID in URL: {UrlId} does not match with feedback ID in content: {ContentId}", id, recipeUpdate.RecipeId);
+
                 return BadRequest();
             }
 
@@ -65,7 +67,7 @@ namespace AllaCookidoo.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFeedback(int id)
         {
-            _logger.LogInformation("Usuwanie opinii o ID: {FeedbackId}", id);
+            _logger.LogInformation("Deleting feedback with ID: {feedbackId}", id);
             await _feedbackService.DeleteFeedback(id);
             return NoContent();
         }

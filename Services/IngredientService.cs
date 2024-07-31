@@ -19,7 +19,7 @@ namespace AllaCookidoo.Services
 
         public async Task AddIngredient(IngredientReguest IngredientCreation)
         {
-            _logger.LogInformation("dodawanie nowego skladniku: {name}", IngredientCreation.Name);
+            _logger.LogInformation("Adding new ingredient: {name}", IngredientCreation.Name);
             try
             {
                 var IngredientEntity = new IngredientEntity
@@ -32,24 +32,24 @@ namespace AllaCookidoo.Services
                 };
 
                 await _ingredientRepository.AddIngredient(IngredientEntity);
-                _logger.LogDebug("Dodano nowego skladniku o ID {IngredientId}", IngredientCreation.Id);
+                _logger.LogDebug("Added new ingredient with ID {ingredientId}", IngredientCreation.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas dodawania nowego skladniku: {name}", IngredientCreation.Name);
+                _logger.LogError(ex, "Error adding new ingredient: {name}", IngredientCreation.Name);
                 throw;
             }
         }
 
         public async Task DeleteIngredient(int id)
         {
-            _logger.LogInformation("usuwanie skladniku o ID: {Id}", id);
+            _logger.LogInformation("Deleting ingredient with ID: {Id}", id);
             try
             {
                 var ingredientEntity = await _ingredientRepository.GetIngredientById(id);
                 if (ingredientEntity == null)
                 {
-                    _logger.LogWarning("skladnik o ID {Id} nie została znaleziona", id);
+                    _logger.LogWarning("Ingredient with ID {Id} was not found", id);
                     throw new KeyNotFoundException("Ingredient not found");
                 }
 
@@ -57,28 +57,28 @@ namespace AllaCookidoo.Services
                 ingredientEntity.UpdatedDate = DateTime.UtcNow;
 
                 await _ingredientRepository.UpdateIngredient(ingredientEntity);
-                _logger.LogDebug("Usunięto skladnik o ID {Id}", id);
+                _logger.LogDebug("Deleted ingredient with ID {Id}", id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas usuwania skladniku o ID {Id}", id);
+                _logger.LogError(ex, "Error deleting ingredient with ID {Id}", id);
                 throw;
             }
         }
 
         public async Task<IngredientResponse> GetIngredientById(int id)
         {
-            _logger.LogInformation("pobieranie skladniku o ID: {Id}", id);
+            _logger.LogInformation("Fetching ingredient with ID: {Id}", id);
             try
             {
                 var ingredient = await _ingredientRepository.GetIngredientById(id);
                 if (ingredient == null || ingredient.IsDeleted)
                 {
-                    _logger.LogWarning("skladnik o ID {Id} nie została znaleziona lub została usunięta", id);
+                    _logger.LogWarning("Ingredient with ID {Id} was not found or has been deleted", id);
                     return null;
                 }
 
-                _logger.LogDebug("Znaleziono skladnik o ID {Id}", id);
+                _logger.LogDebug("Found ingredient with ID {Id}", id);
                 return new IngredientResponse
                 {
                     Id = ingredient.Id,
@@ -87,18 +87,18 @@ namespace AllaCookidoo.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas pobierania skladniku o ID {Id}", id);
+                _logger.LogError(ex, "Error fetching ingredient with ID {Id}", id);
                 throw;
             }
         }
 
         public async Task<IEnumerable<IngredientResponse>> GetIngredients()
         {
-            _logger.LogInformation("pobieranie wszystkich skladnikow");
+            _logger.LogInformation("Fetching all ingredients");
             try
             {
                 var ingredient = await _ingredientRepository.GetIngredients();
-                _logger.LogDebug("Znaleziono {Count} skladnikow", ingredient.Count());
+                _logger.LogDebug("Found {Count} ingredients", ingredient.Count());
                 return ingredient.Select(ingredient => new IngredientResponse
                 {
                     Id = ingredient.Id,
@@ -107,20 +107,20 @@ namespace AllaCookidoo.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas pobierania wszystkich skladnikow");
+                _logger.LogError(ex, "Error fetching all ingredients");
                 throw;
             }
         }
 
         public async Task UpdateIngredient(int id, IngredientResponse IngredientUpdate)
         {
-            _logger.LogInformation("aktualizacja skladnikow o ID: {Id}", id);
+            _logger.LogInformation("Updating ingredient with ID: {Id}", id);
             try
             {
                 var ingredientEntity = await _ingredientRepository.GetIngredientById(id);
                 if (ingredientEntity == null)
                 {
-                    _logger.LogWarning("skladniki o ID {Id} nie została znaleziona", id);
+                    _logger.LogWarning("Ingredient with ID {Id} was not found", id);
                     throw new KeyNotFoundException("Ingredient not found");
                 }
 
@@ -128,11 +128,11 @@ namespace AllaCookidoo.Services
                 ingredientEntity.UpdatedDate = DateTime.UtcNow;
 
                 await _ingredientRepository.UpdateIngredient(ingredientEntity);
-                _logger.LogDebug("Zaktualizowano skladnik o ID {Id}", id);
+                _logger.LogDebug("Updated ingredient with ID {Id}", id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas aktualizacji skladniku o ID {Id}", id);
+                _logger.LogError(ex, "Error updating ingredient with ID {Id}", id);
                 throw;
             }
         }

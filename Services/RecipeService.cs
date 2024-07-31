@@ -11,15 +11,17 @@ namespace AllaCookidoo.Services
     {
         private readonly IRecipeRepository _recipeRepository;
         private readonly ILogger<RecipeService> _logger;
-        public RecipeService(IRecipeRepository recipeRepository, ILogger<RecipeService> logger)
+        private readonly ICategoryRepository _categoryRepository;
+        public RecipeService(IRecipeRepository recipeRepository, ILogger<RecipeService> logger, ICategoryRepository categoryRepository)
         {
             _recipeRepository = recipeRepository;
+            _categoryRepository = categoryRepository;
             _logger = logger;
         }
 
         public async Task<IEnumerable<RecipeResponse>> GetRecipes()
         {
-            _logger.LogInformation("Pobieranie wszystkich przepisów");
+            _logger.LogInformation("Fetching all recipes");
             try
             {
                 var recipes = await _recipeRepository.GetRecipes();
@@ -31,19 +33,19 @@ namespace AllaCookidoo.Services
                     Name = recipe.Name
                 }).ToList();
 
-                _logger.LogDebug("Znaleziono {Count} przepisów", response.Count);
+                _logger.LogDebug("Found {Count} recipes", response.Count);
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas pobierania wszystkich przepisów");
+                _logger.LogError(ex, "Error fetching all recipes");
                 throw;
             }
         }
 
         public async Task<IEnumerable<RecipeResponse>> GetRecipesFromCategory(int categoryId)
         {
-            _logger.LogInformation("Pobieranie przepisów dla kategorii: {CategoryId}", categoryId);
+            _logger.LogInformation("Fetching recipes for category: {CategoryId}", categoryId);
             try
             {
                 var recipes = await _recipeRepository.GetRecipesFromCategory(categoryId);
@@ -55,25 +57,25 @@ namespace AllaCookidoo.Services
                     Name = recipe.Name
                 }).ToList();
 
-                _logger.LogDebug("Znaleziono {Count} przepisów dla kategorii {CategoryId}", response.Count, categoryId);
+                _logger.LogDebug("Found {Count} recipes for category {CategoryId}", response.Count, categoryId);
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas pobierania przepisów dla kategorii {CategoryId}", categoryId);
+                _logger.LogError(ex, "Error fetching recipes for category {CategoryId}", categoryId);
                 throw;
             }
         }
 
         public async Task<RecipeResponse> GetRecipeById(int id)
         {
-            _logger.LogInformation("Pobieranie przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Fetching recipe with ID: {RecipeId}", id);
             try
             {
                 var recipe = await _recipeRepository.GetRecipeById(id);
                 if (recipe == null || recipe.IsDeleted)
                 {
-                    _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony lub został usunięty", id);
+                    _logger.LogWarning("Recipe with ID {RecipeId} was not found or has been deleted", id);
                     return null;
                 }
 
@@ -85,19 +87,26 @@ namespace AllaCookidoo.Services
                     RecipeId = recipe.Id,
                 };
 
-                _logger.LogDebug("Znaleziono przepis o ID {RecipeId}: {RecipeName}", id, response.Name);
+                _logger.LogDebug("Found recipe with ID {RecipeId}: {RecipeName}", id, response.Name);
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas pobierania przepisu o ID {RecipeId}", id);
+                _logger.LogError(ex, "Error fetching recipe with ID {RecipeId}", id);
                 throw;
             }
         }
 
         public async Task AddRecipe(RecipeRequest recipeCreation)
         {
-            _logger.LogInformation("Dodawanie nowego przepisu: {RecipeName}", recipeCreation.Name);
+            _logger.LogInformation("Adding new recipe: {RecipeName}", recipeCreation.Name);
+
+            var categoryExists = await _categoryRepository.GetCategoryById(recipeCreation.CategoryId);
+            if (categoryExists == null)
+            {
+                _logger.LogWarning("Category with ID {CategoryId} does not exist", recipeCreation.CategoryId);
+                throw new ArgumentException($"Category with ID {recipeCreation.CategoryId} does not exist.");
+            }
             try
             {
                 var recipeEntity = new RecipeEntity
@@ -114,24 +123,24 @@ namespace AllaCookidoo.Services
                 };
 
                 await _recipeRepository.AddRecipe(recipeEntity);
-                _logger.LogDebug("Dodano nowy przepis o ID {RecipeId}", recipeEntity.Id);
+                _logger.LogDebug("Added new recipe with ID {RecipeId}", recipeEntity.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas dodawania nowego przepisu: {RecipeName}", recipeCreation.Name);
+                _logger.LogError(ex, "Error adding new recipe: {RecipeName}", recipeCreation.Name);
                 throw;
             }
         }
 
         public async Task UpdateRecipe(int id, RecipeDetailsResponse recipeUpdate)
         {
-            _logger.LogInformation("Aktualizacja przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Updating recipe with ID: {RecipeId}", id);
             try
             {
                 var recipeEntity = await _recipeRepository.GetRecipeById(id);
                 if (recipeEntity == null)
                 {
-                    _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony", id);
+                    _logger.LogWarning("Recipe with ID {RecipeId} was not found", id);
                     throw new KeyNotFoundException("Recipe not found");
                 }
 
@@ -143,24 +152,24 @@ namespace AllaCookidoo.Services
                 recipeEntity.UpdatedDate = DateTime.UtcNow;
 
                 await _recipeRepository.UpdateRecipe(recipeEntity);
-                _logger.LogDebug("Zaktualizowano przepis o ID {RecipeId}", id);
+                _logger.LogDebug("Updated recipe with ID {RecipeId}", id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas aktualizacji przepisu o ID {RecipeId}", id);
+                _logger.LogError(ex, "Error updating recipe with ID {RecipeId}", id);
                 throw;
             }
         }
 
         public async Task DeleteRecipe(int id)
         {
-            _logger.LogInformation("Usuwanie przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Deleting recipe with ID: {RecipeId}", id);
             try
             {
                 var recipeEntity = await _recipeRepository.GetRecipeById(id);
                 if (recipeEntity == null)
                 {
-                    _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony", id);
+                    _logger.LogWarning("Recipe with ID {RecipeId} was not found", id);
                     throw new KeyNotFoundException("Recipe not found");
                 }
 
@@ -168,24 +177,24 @@ namespace AllaCookidoo.Services
                 recipeEntity.UpdatedDate = DateTime.UtcNow;
 
                 await _recipeRepository.UpdateRecipe(recipeEntity);
-                _logger.LogDebug("Usunięto przepis o ID {RecipeId}", id);
+                _logger.LogDebug("Deleted recipe with ID {RecipeId}", id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas usuwania przepisu o ID {RecipeId}", id);
+                _logger.LogError(ex, "Error deleting recipe with ID {RecipeId}", id);
                 throw;
             }
         }
 
         public async Task<RecipeDetailsResponse> GetRecipeDetailsById(int id)
         {
-            _logger.LogInformation("Pobieranie szczegolow przepisu o ID: {RecipeId}", id);
+            _logger.LogInformation("Fetching recipe details with ID: {RecipeId}", id);
             try
             {
                 var recipe = await _recipeRepository.GetRecipeById(id);
                 if (recipe == null || recipe.IsDeleted)
                 {
-                    _logger.LogWarning("Przepis o ID {RecipeId} nie został znaleziony lub został usunięty", id);
+                    _logger.LogWarning("Recipe with ID {RecipeId} was not found or has been deleted", id);
                     return null;
                 }
 
@@ -213,12 +222,12 @@ namespace AllaCookidoo.Services
                     }).ToList()
                 };
 
-                _logger.LogDebug("Znaleziono szczegoly przepisu o ID {RecipeId}: {RecipeName}", id, response.Name);
+                _logger.LogDebug("Found recipe details with ID {RecipeId}: {RecipeName}", id, response.Name);
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Błąd podczas pobierania szczegolow przepisu o ID {RecipeId}", id);
+                _logger.LogError(ex, "Error fetching recipe details with ID {RecipeId}", id);
                 throw;
             }
         }
